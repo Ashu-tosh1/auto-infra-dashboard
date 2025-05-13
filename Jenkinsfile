@@ -12,7 +12,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("auto-infra-dashboard")
+                    // Using Docker Pipeline plugin syntax
+                    docker.build("auto-infra-dashboard:${env.BUILD_ID}")
                 }
             }
         }
@@ -20,7 +21,9 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    docker.image("auto-infra-dashboard").run("-p 8080:80")
+                    // Using Docker Pipeline plugin syntax
+                    docker.image("auto-infra-dashboard:${env.BUILD_ID}")
+                          .run('-d -p 8080:80 --name auto-infra-container')
                 }
             }
         }
@@ -29,7 +32,14 @@ pipeline {
     post {
         always {
             echo 'Cleaning up...'
-            sh 'docker system prune -f || true'
+            script {
+                try {
+                    // Using Docker Pipeline plugin syntax
+                    sh 'docker system prune -f'
+                } catch (Exception e) {
+                    echo "Docker cleanup failed, but continuing: ${e.message}"
+                }
+            }
         }
     }
 }
