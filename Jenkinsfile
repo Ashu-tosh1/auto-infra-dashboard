@@ -12,8 +12,13 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Using Docker Pipeline plugin syntax
-                    docker.build("auto-infra-dashboard:${env.BUILD_ID}")
+                    // Using Docker Pipeline plugin syntax with better error handling
+                    try {
+                        docker.build("auto-infra-dashboard:${env.BUILD_ID}")
+                        echo "Docker image built successfully with tag: auto-infra-dashboard:${env.BUILD_ID}"
+                    } catch (Exception e) {
+                        error "Failed to build Docker image: ${e.message}"
+                    }
                 }
             }
         }
@@ -21,9 +26,28 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    // Using Docker Pipeline plugin syntax
-                    docker.image("auto-infra-dashboard:${env.BUILD_ID}")
-                          .run('-d -p 8080:80 --name auto-infra-container')
+                    // Stop and remove existing container if it exists
+                    sh 'docker ps -q --filter name=auto-infra-container | grep -q . && docker stop auto-infra-container && docker rm auto-infra-container || echo "No existing container to remove"'
+                    
+                    // Using Docker Pipeline plugin syntax with better error handling
+                    try {
+                        docker.image("auto-infra-dashboard:${env.BUILD_ID}")
+                              .run('-d -p 8080:80 --name auto-infra-container')
+                        echo "Docker container started successfully on port 8080"
+                    } catch (Exception e) {
+                        error "Failed to run Docker container: ${e.message}"
+                    }
+                }
+            }
+        }
+        
+        stage('Verify Deployment') {
+            steps {
+                script {
+                    // Wait for container to start and verify it's running
+                    sleep 5
+                    sh 'docker ps | grep auto-infra-container'
+                    echo "Deployment verification complete. Container is running."
                 }
             }
         }
@@ -34,12 +58,18 @@ pipeline {
             echo 'Cleaning up...'
             script {
                 try {
-                    // Using Docker Pipeline plugin syntax
-                    sh 'docker system prune -f'
+                    // Only prune untagged/dangling images to avoid removing current image
+                    sh 'docker image prune -f'
                 } catch (Exception e) {
                     echo "Docker cleanup failed, but continuing: ${e.message}"
                 }
             }
+        }
+        success {
+            echo "Pipeline executed successfully! Access your application at http://localhost:8080"
+        }
+        failure {
+            echo "Pipeline failed. Check the logs for details."
         }
     }
 }
