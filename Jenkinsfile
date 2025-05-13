@@ -11,18 +11,16 @@ pipeline {
         
         stage('Build Docker Image') {
             steps {
-                // Your build commands here
                 script {
-                    sh 'docker build -t auto-infra-dashboard .'
+                    docker.build("auto-infra-dashboard")
                 }
             }
         }
         
         stage('Run Docker Container') {
             steps {
-                // Your run commands here
                 script {
-                    sh 'docker run -d -p 8080:80 auto-infra-dashboard'
+                    docker.image("auto-infra-dashboard").run("-p 8080:80")
                 }
             }
         }
@@ -31,7 +29,7 @@ pipeline {
     post {
         always {
             echo 'Cleaning up...'
-            sh 'docker system prune -f || true'  // Added || true to prevent failure if Docker isn't available
+            sh 'docker system prune -f || true'
         }
     }
 }
