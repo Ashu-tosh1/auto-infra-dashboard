@@ -12,9 +12,9 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Using Docker Pipeline plugin syntax with better error handling
+                    // Using bat for Windows
                     try {
-                        docker.build("auto-infra-dashboard:${env.BUILD_ID}")
+                        bat "docker build -t auto-infra-dashboard:${env.BUILD_ID} ."
                         echo "Docker image built successfully with tag: auto-infra-dashboard:${env.BUILD_ID}"
                     } catch (Exception e) {
                         error "Failed to build Docker image: ${e.message}"
@@ -26,13 +26,21 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    // Stop and remove existing container if it exists
-                    sh 'docker ps -q --filter name=auto-infra-container | grep -q . && docker stop auto-infra-container && docker rm auto-infra-container || echo "No existing container to remove"'
+                    // Stop and remove existing container if it exists - Windows version
+                    bat '''
+                        docker ps -q --filter name=auto-infra-container > container_id.txt
+                        set /p CONTAINER_ID=<container_id.txt
+                        if defined CONTAINER_ID (
+                            docker stop auto-infra-container
+                            docker rm auto-infra-container
+                        ) else (
+                            echo No existing container to remove
+                        )
+                    '''
                     
-                    // Using Docker Pipeline plugin syntax with better error handling
+                    // Run the container - Windows version
                     try {
-                        docker.image("auto-infra-dashboard:${env.BUILD_ID}")
-                              .run('-d -p 8080:80 --name auto-infra-container')
+                        bat "docker run -d -p 8080:80 --name auto-infra-container auto-infra-dashboard:${env.BUILD_ID}"
                         echo "Docker container started successfully on port 8080"
                     } catch (Exception e) {
                         error "Failed to run Docker container: ${e.message}"
@@ -44,9 +52,9 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 script {
-                    // Wait for container to start and verify it's running
+                    // Wait for container to start and verify it's running - Windows version
                     sleep 5
-                    sh 'docker ps | grep auto-infra-container'
+                    bat 'docker ps | findstr auto-infra-container'
                     echo "Deployment verification complete. Container is running."
                 }
             }
@@ -58,8 +66,8 @@ pipeline {
             echo 'Cleaning up...'
             script {
                 try {
-                    // Only prune untagged/dangling images to avoid removing current image
-                    sh 'docker image prune -f'
+                    // Only prune untagged/dangling images - Windows version
+                    bat 'docker image prune -f'
                 } catch (Exception e) {
                     echo "Docker cleanup failed, but continuing: ${e.message}"
                 }
