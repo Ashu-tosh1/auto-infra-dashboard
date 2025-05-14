@@ -39,12 +39,8 @@ pipeline {
                     '''
                     
                     // Run the container - Windows version
-                    try {
-                        bat "docker run -d -p 8080:80 --name auto-infra-container auto-infra-dashboard:${env.BUILD_ID}"
-                        echo "Docker container started successfully on port 8080"
-                    } catch (Exception e) {
-                        error "Failed to run Docker container: ${e.message}"
-                    }
+                    bat "docker run -d -p 8080:80 --name auto-infra-container auto-infra-dashboard:${env.BUILD_ID}"
+                    echo "Docker container started successfully on port 8080"
                 }
             }
         }
