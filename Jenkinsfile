@@ -21,29 +21,36 @@ pipeline {
         
         stage('Run Docker Container') {
             steps {
-                script {
-                    // Stop and remove container if it exists
-                    bat "docker stop auto-infra-container 2>nul || echo Container not running"
-                    bat "docker rm auto-infra-container 2>nul || echo No container to remove"
-                    
-                    // Run the new container with the port mapping that matches your configuration
-                    bat "docker run -d -p 3001:3002 --name auto-infra-container auto-infra-dashboard:${env.BUILD_NUMBER}"
-                    echo "Container started successfully"
-                }
+                // Stop container if it exists - using different syntax to avoid batch script issues
+                bat '''
+                    docker stop auto-infra-container > nul 2>&1 || echo Container not running
+                '''
+                
+                // Remove container if it exists
+                bat '''
+                    docker rm auto-infra-container > nul 2>&1 || echo No container to remove
+                '''
+                
+                // Run the new container
+                bat """
+                    docker run -d -p 3001:3002 --name auto-infra-container auto-infra-dashboard:${env.BUILD_NUMBER}
+                """
+                
+                echo "Container started successfully"
             }
         }
         
         stage('Verify Deployment') {
             steps {
-                script {
-                    // Give the application a moment to start
-                    bat "timeout /t 10"
-                    
-                    // Verify the container is running
-                    bat "docker ps | findstr auto-infra-container"
-                    
-                    echo "Application deployed successfully at http://localhost:3001"
-                }
+                // Give the application a moment to start
+                bat "timeout /t 15"
+                
+                // Verify the container is running
+                bat '''
+                    docker ps | findstr auto-infra-container || (echo Container not running && exit /b 1)
+                '''
+                
+                echo "Application deployed successfully at http://localhost:3001"
             }
         }
     }
