@@ -1,55 +1,57 @@
 pipeline {
     agent any
     
-    tools {
-        nodejs 'Node18'
-    }
-
     stages {
-        stage('Checkout') {
+        stage('Clone') {
             steps {
-                checkout scm
+                echo 'Cloning repo...'
+                git branch: 'main', url: 'https://github.com/Ashu-tosh1/auto-infra-dashboard.git'
             }
         }
         
-        stage('Install Dependencies') {
-            steps {
-                bat 'npm ci'
-            }
-        }
-        
-        stage('Lint') {
-            steps {
-                bat 'npm run lint || exit 0'
-            }
-        }
-        
-        stage('Build') {
-            steps {
-                bat 'npm run build'
-            }
-        }
-        
-        stage('Docker Build') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    bat "docker build -t autoinfra-app:${env.BUILD_NUMBER} ."
-                    bat "docker tag autoinfra-app:${env.BUILD_NUMBER} autoinfra-app:latest"
+                    // Using bat for Windows
+                    try {
+                        bat "docker build -t auto-infra-dashboard:${env.BUILD_ID} ."
+                        echo "Docker image built successfully with tag: auto-infra-dashboard:${env.BUILD_ID}"
+                    } catch (Exception e) {
+                        error "Failed to build Docker image: ${e.message}"
+                    }
                 }
             }
         }
         
-        stage('Deploy') {
+        stage('Run Docker Container') {
             steps {
                 script {
-                    // Stop and remove any existing container
+                    // Stop and remove existing container if it exists - Windows version
                     bat '''
-                    FOR /f "tokens=*" %%i IN ('docker ps -f name^=autoinfra -q') DO docker stop %%i
-                    FOR /f "tokens=*" %%i IN ('docker ps -a -f name^=autoinfra -q') DO docker rm %%i
+                        docker ps -q --filter name=auto-infra-container > container_id.txt
+                        set /p CONTAINER_ID=<container_id.txt
+                        if defined CONTAINER_ID (
+                            docker stop auto-infra-container
+                            docker rm auto-infra-container
+                        ) else (
+                            echo No existing container to remove
+                        )
                     '''
                     
-                    // Run the new container
-                    bat "docker run -d -p 3001:3002 --name autoinfra-app-${env.BUILD_NUMBER} autoinfra-app:${env.BUILD_NUMBER}"
+                    // Run the container - Windows version
+                    bat "docker run -d -p 8080:80 --name auto-infra-container auto-infra-dashboard:${env.BUILD_ID}"
+                    echo "Docker container started successfully on port 8080"
+                }
+            }
+        }
+        
+        stage('Verify Deployment') {
+            steps {
+                script {
+                    // Wait for container to start and verify it's running - Windows version
+                    sleep 5
+                    bat 'docker ps | findstr auto-infra-container'
+                    echo "Deployment verification complete. Container is running."
                 }
             }
         }
@@ -57,14 +59,21 @@ pipeline {
     
     post {
         always {
-            // Clean up older images to save disk space
-            bat 'docker image prune -f'
+            echo 'Cleaning up...'
+            script {
+                try {
+                    // Only prune untagged/dangling images - Windows version
+                    bat 'docker image prune -f'
+                } catch (Exception e) {
+                    echo "Docker cleanup failed, but continuing: ${e.message}"
+                }
+            }
         }
         success {
-            echo 'Pipeline completed successfully!'
+            echo "Pipeline executed successfully! Access your application at http://localhost:8080"
         }
         failure {
-            echo 'Pipeline failed!'
+            echo "Pipeline failed. Check the logs for details."
         }
     }
 }
