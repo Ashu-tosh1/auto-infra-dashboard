@@ -22,12 +22,12 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    // Stop and remove container if it exists - using separate commands to avoid batch file syntax issues
+                    // Stop and remove container if it exists
                     bat "docker stop auto-infra-container 2>nul || echo Container not running"
                     bat "docker rm auto-infra-container 2>nul || echo No container to remove"
                     
-                    // Run the new container - make sure to use the exposed port from your Dockerfile (3002)
-                    bat "docker run -d -p 3003:3003 --name auto-infra-container auto-infra-dashboard:${env.BUILD_NUMBER}"
+                    // Run the new container with the port mapping that matches your configuration
+                    bat "docker run -d -p 3001:3002 --name auto-infra-container auto-infra-dashboard:${env.BUILD_NUMBER}"
                     echo "Container started successfully"
                 }
             }
@@ -37,7 +37,7 @@ pipeline {
             steps {
                 script {
                     // Give the application a moment to start
-                    bat "timeout /t 5"
+                    bat "timeout /t 10"
                     
                     // Verify the container is running
                     bat "docker ps | findstr auto-infra-container"
