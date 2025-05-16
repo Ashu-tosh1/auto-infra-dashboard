@@ -11,43 +11,52 @@ pipeline {
         
         stage('Build Docker Image') {
             steps {
-                script {
-                    // Build the Docker image with a tag based on build number
-                    bat "docker build -t auto-infra-dashboard:${env.BUILD_NUMBER} ."
-                    echo "Docker image built successfully with tag: auto-infra-dashboard:${env.BUILD_NUMBER}"
-                }
+                echo "Building Docker image..."
+                bat "docker build -t auto-infra-dashboard:${BUILD_NUMBER} ."
+                echo "Docker image built successfully with tag: auto-infra-dashboard:${BUILD_NUMBER}"
+            }
+        }
+        
+        stage('Prepare for Container Run') {
+            steps {
+                echo "Stopping any existing container..."
+                bat '''
+                    echo Stopping any existing container...
+                    docker stop auto-infra-container || echo Container not running
+                '''
+                
+                echo "Removing any existing container..."
+                bat '''
+                    echo Removing any existing container...
+                    docker rm auto-infra-container || echo No container to remove
+                '''
             }
         }
         
         stage('Run Docker Container') {
             steps {
-                // Stop container if it exists - using different syntax to avoid batch script issues
-                bat '''
-                    docker stop auto-infra-container > nul 2>&1 || echo Container not running
-                '''
-                
-                // Remove container if it exists
-                bat '''
-                    docker rm auto-infra-container > nul 2>&1 || echo No container to remove
-                '''
-                
-                // Run the new container
+                echo "Starting new container..."
                 bat """
-                    docker run -d -p 3001:3002 --name auto-infra-container auto-infra-dashboard:${env.BUILD_NUMBER}
+                    echo Starting new container...
+                    docker run -d -p 3001:3002 --name auto-infra-container auto-infra-dashboard:${BUILD_NUMBER}
+                    echo Container started
                 """
-                
-                echo "Container started successfully"
             }
         }
         
         stage('Verify Deployment') {
             steps {
-                // Give the application a moment to start
+                echo "Waiting for application to start..."
                 bat "timeout /t 15"
                 
-                // Verify the container is running
+                echo "Verifying container is running..."
                 bat '''
-                    docker ps | findstr auto-infra-container || (echo Container not running && exit /b 1)
+                    docker ps | findstr auto-infra-container
+                    if %errorlevel% neq 0 (
+                        echo Container not running
+                        exit /b 1
+                    )
+                    echo Container is running
                 '''
                 
                 echo "Application deployed successfully at http://localhost:3001"
@@ -58,10 +67,10 @@ pipeline {
     post {
         always {
             echo "Cleaning up..."
-            script {
-                // Prune unused images to save disk space
-                bat "docker image prune -f"
-            }
+            bat '''
+                echo Running cleanup...
+                docker image prune -f || echo Cleanup failed but continuing
+            '''
         }
         success {
             echo "Pipeline completed successfully!"
