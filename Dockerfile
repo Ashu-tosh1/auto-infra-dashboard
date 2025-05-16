@@ -20,11 +20,11 @@ FROM node:18-alpine
 WORKDIR /app
 COPY --from=builder /app ./
 
-# Set the port to 3001
-ENV PORT=3001
+# Set the port to 3002
+ENV PORT=3002
 
-# Expose port 3001 to Docker
-EXPOSE 3001
+# Expose port 3002 to Docker
+EXPOSE 3002
 
 # Start the app
 CMD ["npm", "start"]
