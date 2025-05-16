@@ -12,51 +12,39 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "Building Docker image..."
-                bat "docker build -t auto-infra-dashboard:${BUILD_NUMBER} ."
+                powershell "docker build -t auto-infra-dashboard:\${env:BUILD_NUMBER} ."
                 echo "Docker image built successfully with tag: auto-infra-dashboard:${BUILD_NUMBER}"
             }
         }
         
-        stage('Prepare for Container Run') {
+        stage('Deploy Container') {
             steps {
-                echo "Stopping any existing container..."
-                bat '''
-                    echo Stopping any existing container...
-                    docker stop auto-infra-container || echo Container not running
-                '''
-                
-                echo "Removing any existing container..."
-                bat '''
-                    echo Removing any existing container...
-                    docker rm auto-infra-container || echo No container to remove
-                '''
-            }
-        }
-        
-        stage('Run Docker Container') {
-            steps {
-                echo "Starting new container..."
-                bat """
-                    echo Starting new container...
-                    docker run -d -p 3001:3002 --name auto-infra-container auto-infra-dashboard:${BUILD_NUMBER}
-                    echo Container started
-                """
-            }
-        }
-        
-        stage('Verify Deployment') {
-            steps {
-                echo "Waiting for application to start..."
-                bat "timeout /t 15"
-                
-                echo "Verifying container is running..."
-                bat '''
-                    docker ps | findstr auto-infra-container
-                    if %errorlevel% neq 0 (
-                        echo Container not running
-                        exit /b 1
-                    )
-                    echo Container is running
+                echo "Deploying container..."
+                // Use powershell instead of batch to handle Docker commands more reliably
+                powershell '''
+                    # Stop container if running
+                    if (docker ps -a --format "{{.Names}}" | Select-String -Pattern "auto-infra-container") {
+                        Write-Host "Stopping existing container..."
+                        docker stop auto-infra-container
+                        docker rm auto-infra-container
+                    } else {
+                        Write-Host "No existing container found."
+                    }
+                    
+                    # Run new container
+                    Write-Host "Starting new container..."
+                    docker run -d -p 3001:3002 --name auto-infra-container auto-infra-dashboard:$env:BUILD_NUMBER
+                    
+                    # Verify container is running
+                    Start-Sleep -Seconds 5
+                    $container = docker ps --filter "name=auto-infra-container" --format "{{.Names}}"
+                    
+                    if ($container -eq "auto-infra-container") {
+                        Write-Host "Container successfully deployed!"
+                    } else {
+                        Write-Host "Container deployment failed!"
+                        exit 1
+                    }
                 '''
                 
                 echo "Application deployed successfully at http://localhost:3001"
@@ -67,9 +55,13 @@ pipeline {
     post {
         always {
             echo "Cleaning up..."
-            bat '''
-                echo Running cleanup...
-                docker image prune -f || echo Cleanup failed but continuing
+            powershell '''
+                try {
+                    docker image prune -f
+                    Write-Host "Cleanup completed."
+                } catch {
+                    Write-Host "Cleanup failed but continuing."
+                }
             '''
         }
         success {
