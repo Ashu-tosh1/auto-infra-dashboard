@@ -1,6 +1,13 @@
 pipeline {
     agent any
     
+    environment {
+        DOCKER_IMAGE = 'auto-infra-dashboard'
+        CONTAINER_NAME = 'auto-infra-container'
+        TAG = '10'
+        PORT = '3001'
+    }
+    
     stages {
         stage('Clone') {
             steps {
@@ -11,64 +18,70 @@ pipeline {
         
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image..."
-                powershell "docker build -t auto-infra-dashboard:\${env:BUILD_NUMBER} ."
-                echo "Docker image built successfully with tag: auto-infra-dashboard:${BUILD_NUMBER}"
+                echo 'Building Docker image...'
+                powershell '''
+                    docker build -t ${DOCKER_IMAGE}:${TAG} .
+                '''
+                echo "Docker image built successfully with tag: ${DOCKER_IMAGE}:${TAG}"
             }
         }
         
         stage('Deploy Container') {
             steps {
-                echo "Deploying container..."
-                // Use powershell instead of batch to handle Docker commands more reliably
+                echo 'Deploying container...'
                 powershell '''
-                    # Stop container if running
-                    if (docker ps -a --format "{{.Names}}" | Select-String -Pattern "auto-infra-container") {
-                        Write-Host "Stopping existing container..."
-                        docker stop auto-infra-container
-                        docker rm auto-infra-container
-                    } else {
-                        Write-Host "No existing container found."
+                    echo "Checking if port ${PORT} is in use..."
+                    $portInUse = netstat -ano | findstr :${PORT}
+                    if ($portInUse) {
+                        echo "Port ${PORT} is in use. Attempting to find and remove conflicting containers..."
+                        $containersUsingPort = docker ps -q --filter "publish=${PORT}"
+                        if ($containersUsingPort) {
+                            echo "Found containers using port ${PORT}. Stopping them..."
+                            docker stop $containersUsingPort
+                            docker rm $containersUsingPort
+                        }
                     }
                     
-                    # Run new container
-                    Write-Host "Starting new container..."
-                    docker run -d -p 3001:3002 --name auto-infra-container auto-infra-dashboard:$env:BUILD_NUMBER
+                    echo "Stopping and removing old container if it exists..."
+                    docker stop ${CONTAINER_NAME} 2>$null
+                    docker rm ${CONTAINER_NAME} 2>$null
                     
-                    # Verify container is running
-                    Start-Sleep -Seconds 5
-                    $container = docker ps --filter "name=auto-infra-container" --format "{{.Names}}"
+                    echo "Starting new container..."
+                    docker run -d --name ${CONTAINER_NAME} -p ${PORT}:3000 ${DOCKER_IMAGE}:${TAG}
                     
-                    if ($container -eq "auto-infra-container") {
-                        Write-Host "Container successfully deployed!"
+                    if ($LASTEXITCODE -ne 0) {
+                        echo "Container deployment failed! Trying alternative port..."
+                        $alternativePort = "3003"
+                        echo "Attempting to use port $alternativePort instead..."
+                        docker run -d --name ${CONTAINER_NAME} -p $alternativePort:3000 ${DOCKER_IMAGE}:${TAG}
+                        
+                        if ($LASTEXITCODE -eq 0) {
+                            echo "Container successfully deployed on port $alternativePort!"
+                        } else {
+                            echo "Container deployment failed on alternative port as well!"
+                            exit 1
+                        }
                     } else {
-                        Write-Host "Container deployment failed!"
-                        exit 1
+                        echo "Container successfully deployed!"
                     }
                 '''
-                
-                echo "Application deployed successfully at http://localhost:3001"
             }
         }
     }
     
     post {
         always {
-            echo "Cleaning up..."
+            echo 'Cleaning up...'
             powershell '''
-                try {
-                    docker image prune -f
-                    Write-Host "Cleanup completed."
-                } catch {
-                    Write-Host "Cleanup failed but continuing."
-                }
+                docker system prune -f
+                echo "Cleanup completed."
             '''
         }
         success {
-            echo "Pipeline completed successfully!"
+            echo 'Pipeline completed successfully!'
         }
         failure {
-            echo "Pipeline failed. Check the logs for details."
+            echo 'Pipeline failed. Check the logs for details.'
         }
     }
 }
