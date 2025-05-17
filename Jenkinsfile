@@ -37,7 +37,7 @@ pipeline {
                     $dockerImage = "auto-infra-dashboard"
                     $tag = "10"
                     $containerName = "auto-infra-container"
-                    $port = "3001"
+                    $port = "3002"
                     
                     Write-Host "Checking if port $port is in use..."
                     $portInUse = netstat -ano | findstr ":$port"
@@ -56,7 +56,7 @@ pipeline {
                     docker rm $containerName 2>$null
                     
                     Write-Host "Starting new container..."
-                    docker run -d --name $containerName -p "$port`:3000" "$dockerImage`:$tag"
+                    docker run -d --name $containerName -p "$port`:3002" "$dockerImage`:$tag"
                     
                     if ($LASTEXITCODE -ne 0) {
                         Write-Host "Container deployment failed! Trying alternative port..."
