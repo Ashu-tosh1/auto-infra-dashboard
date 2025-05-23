@@ -1,7 +1,12 @@
 pipeline {
     agent any
-    
-    // Define constants directly instead of using environment variables
+
+    environment {
+        DOCKER_IMAGE = "auto-infra-dashboard"
+        TAG = "10"
+        DOCKERHUB_REPO = "ashutosh1201/auto-infra-dashboard"
+    }
+
     stages {
         stage('Clone') {
             steps {
@@ -9,7 +14,7 @@ pipeline {
                 git url: 'https://github.com/Ashu-tosh1/auto-infra-dashboard.git', branch: 'main'
             }
         }
-        
+
         stage('Build Docker Image') {
             steps {
                 echo 'Building Docker image...'
@@ -29,7 +34,41 @@ pipeline {
                 '''
             }
         }
-        
+
+        stage('Push to Docker Hub') {
+            steps {
+                echo 'Pushing Docker image to Docker Hub...'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    powershell script: '''
+                        $dockerImage = "auto-infra-dashboard"
+                        $tag = "10"
+                        $dockerHubImage = "ashutosh1201/$dockerImage"
+
+                        Write-Host "Logging into Docker Hub..."
+                        echo $env:DOCKER_PASS | docker login -u $env:DOCKER_USER --password-stdin
+
+                        if ($LASTEXITCODE -ne 0) {
+                            Write-Host "Docker login failed!"
+                            exit 1
+                        }
+
+                        Write-Host "Tagging image for Docker Hub..."
+                        docker tag "$dockerImage`:$tag" "$dockerHubImage`:$tag"
+
+                        Write-Host "Pushing image to Docker Hub..."
+                        docker push "$dockerHubImage`:$tag"
+
+                        if ($LASTEXITCODE -ne 0) {
+                            Write-Host "Docker push failed!"
+                            exit 1
+                        } else {
+                            Write-Host "Image pushed successfully to Docker Hub!"
+                        }
+                    '''
+                }
+            }
+        }
+
         stage('Deploy Container') {
             steps {
                 echo 'Deploying container...'
@@ -77,7 +116,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
             echo 'Cleaning up...'
