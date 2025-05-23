@@ -76,40 +76,41 @@ pipeline {
             }
         }
 
-        stage('Push Docker Image') {
-            steps {
-                echo 'Pushing Docker image to Docker Hub...'
-                withCredentials([usernamePassword(credentialsId: 'docker-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    powershell script: '''
-                        $imageName = "auto-infra-dashboard"
-                        $tag = "10"
-                        $fullImage = "$env:DOCKER_USER/$imageName:$tag"
+       stage('Push Docker Image') {
+    steps {
+        echo 'Pushing Docker image to Docker Hub...'
+        withCredentials([usernamePassword(credentialsId: 'docker-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+            powershell script: '''
+                $imageName = "auto-infra-dashboard"
+                $tag = "10"
+                $fullImage = "${env:DOCKER_USER}/$imageName:$tag"
 
-                        Write-Host "Logging into Docker Hub..."
-                        docker logout
-                        echo $env:DOCKER_PASS | docker login -u $env:DOCKER_USER --password-stdin
+                Write-Host "Logging into Docker Hub..."
+                docker logout
+                echo $env:DOCKER_PASS | docker login -u $env:DOCKER_USER --password-stdin
 
-                        if ($LASTEXITCODE -ne 0) {
-                            Write-Host "Docker login failed!"
-                            exit 1
-                        }
-
-                        Write-Host "Tagging Docker image as $fullImage..."
-                        docker tag "$imageName:$tag" $fullImage
-
-                        Write-Host "Pushing Docker image to Docker Hub..."
-                        docker push $fullImage
-
-                        if ($LASTEXITCODE -ne 0) {
-                            Write-Host "Docker push failed!"
-                            exit 1
-                        } else {
-                            Write-Host "Docker image pushed successfully to $fullImage!"
-                        }
-                    '''
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Docker login failed!"
+                    exit 1
                 }
-            }
+
+                Write-Host "Tagging Docker image as $fullImage..."
+                docker tag "$imageName:$tag" "$fullImage"
+
+                Write-Host "Pushing Docker image to Docker Hub..."
+                docker push "$fullImage"
+
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Docker push failed!"
+                    exit 1
+                } else {
+                    Write-Host "Docker image pushed successfully to $fullImage!"
+                }
+            '''
         }
+    }
+}
+
     }
 
     post {
