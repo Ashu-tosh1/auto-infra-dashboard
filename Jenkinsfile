@@ -1,12 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = "auto-infra-dashboard"
-        TAG = "10"
-        DOCKERHUB_REPO = "ashutosh1201/auto-infra-dashboard"
-    }
-
     stages {
         stage('Clone') {
             steps {
@@ -21,51 +15,17 @@ pipeline {
                 powershell script: '''
                     $dockerImage = "auto-infra-dashboard"
                     $tag = "10"
-                    
+
                     Write-Host "Building Docker image: $dockerImage`:$tag"
                     docker build -t "$dockerImage`:$tag" .
-                    
+
                     if ($LASTEXITCODE -ne 0) {
                         Write-Host "Docker build failed with exit code $LASTEXITCODE"
                         exit 1
                     }
-                    
+
                     Write-Host "Docker image built successfully with tag: $dockerImage`:$tag"
                 '''
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-                echo 'Pushing Docker image to Docker Hub...'
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    powershell script: '''
-                        $dockerImage = "auto-infra-dashboard"
-                        $tag = "10"
-                        $dockerHubImage = "ashutosh1201/$dockerImage"
-
-                        Write-Host "Logging into Docker Hub..."
-                        echo $env:DOCKER_PASS | docker login -u $env:DOCKER_USER --password-stdin
-
-                        if ($LASTEXITCODE -ne 0) {
-                            Write-Host "Docker login failed!"
-                            exit 1
-                        }
-
-                        Write-Host "Tagging image for Docker Hub..."
-                        docker tag "$dockerImage`:$tag" "$dockerHubImage`:$tag"
-
-                        Write-Host "Pushing image to Docker Hub..."
-                        docker push "$dockerHubImage`:$tag"
-
-                        if ($LASTEXITCODE -ne 0) {
-                            Write-Host "Docker push failed!"
-                            exit 1
-                        } else {
-                            Write-Host "Image pushed successfully to Docker Hub!"
-                        }
-                    '''
-                }
             }
         }
 
@@ -77,7 +37,7 @@ pipeline {
                     $tag = "10"
                     $containerName = "auto-infra-container"
                     $port = "3002"
-                    
+
                     Write-Host "Checking if port $port is in use..."
                     $portInUse = netstat -ano | findstr ":$port"
                     if ($portInUse) {
@@ -89,20 +49,20 @@ pipeline {
                             docker rm $containersUsingPort
                         }
                     }
-                    
+
                     Write-Host "Stopping and removing old container if it exists..."
                     docker stop $containerName 2>$null
                     docker rm $containerName 2>$null
-                    
+
                     Write-Host "Starting new container..."
                     docker run -d --name $containerName -p "$port`:3002" "$dockerImage`:$tag"
-                    
+
                     if ($LASTEXITCODE -ne 0) {
                         Write-Host "Container deployment failed! Trying alternative port..."
                         $alternativePort = "3002"
                         Write-Host "Attempting to use port $alternativePort instead..."
                         docker run -d --name $containerName -p "$alternativePort`:3000" "$dockerImage`:$tag"
-                        
+
                         if ($LASTEXITCODE -eq 0) {
                             Write-Host "Container successfully deployed on port $alternativePort!"
                         } else {
@@ -113,6 +73,41 @@ pipeline {
                         Write-Host "Container successfully deployed!"
                     }
                 '''
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                echo 'Pushing Docker image to Docker Hub...'
+                withCredentials([usernamePassword(credentialsId: 'docker-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    powershell script: '''
+                        $imageName = "auto-infra-dashboard"
+                        $tag = "10"
+                        $fullImage = "$env:DOCKER_USER/$imageName:$tag"
+
+                        Write-Host "Logging into Docker Hub..."
+                        docker logout
+                        echo $env:DOCKER_PASS | docker login -u $env:DOCKER_USER --password-stdin
+
+                        if ($LASTEXITCODE -ne 0) {
+                            Write-Host "Docker login failed!"
+                            exit 1
+                        }
+
+                        Write-Host "Tagging Docker image as $fullImage..."
+                        docker tag "$imageName:$tag" $fullImage
+
+                        Write-Host "Pushing Docker image to Docker Hub..."
+                        docker push $fullImage
+
+                        if ($LASTEXITCODE -ne 0) {
+                            Write-Host "Docker push failed!"
+                            exit 1
+                        } else {
+                            Write-Host "Docker image pushed successfully to $fullImage!"
+                        }
+                    '''
+                }
             }
         }
     }
