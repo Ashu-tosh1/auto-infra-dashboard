@@ -481,11 +481,10 @@ Kind: `Username with password`, ID: `dockerhub-token`
 ### Prometheus
 Configure `prometheus.yml` and run Prometheus.
 
-### Node Exporter
-Run `node_exporter.exe`
+
 
 ### Grafana
-Run and access at `http://localhost:3000`
+Run and access at `http://localhost:3010`
 
 - Add Prometheus as a Data Source
 - Import dashboard ID `1860`
@@ -567,13 +566,13 @@ docker ps
 
 --- -->
 
-### 🌐 EC2 Security Group Rules
+<!-- ### 🌐 EC2 Security Group Rules
 
 > Ensuring open ports for SSH, Jenkins, and the app.
 
 ![EC2 Security Groups](https://user-images.githubusercontent.com/your-username/ec2-security-group.png) <sub>*Fig 5. EC2 instance security group allowing ports 22, 8080, and 3002*</sub>
 
----
+--- -->
 
 <!-- 
 ### 📂 GitHub Webhook (Optional)
