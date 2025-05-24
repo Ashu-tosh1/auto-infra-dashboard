@@ -226,23 +226,37 @@ Create `Dockerfile` in project root:
 
 ```dockerfile
 # Stage 1: Build the Next.js app
+# Stage 1: Build the Next.js app
 FROM node:18-alpine AS builder
 
+# Set working directory
 WORKDIR /app
+
+# Install dependencies
 COPY package.json package-lock.json* ./
 RUN npm install
+
+# Copy the rest of the code
 COPY . .
+
+# Build the app
 RUN npm run build
 
 # Stage 2: Run the app
 FROM node:18-alpine
+
 WORKDIR /app
 COPY --from=builder /app ./
 
+# Set the port to 3002
 ENV PORT=3002
+
+# Expose port 3002 to Docker
 EXPOSE 3002
 
+# Start the app
 CMD ["npm", "start"]
+
 ```
 
 ### Step 2: Create .dockerignore
@@ -300,78 +314,145 @@ Configure Git and Node.js in Jenkins → Global Tool Configuration.
 ### Step 5: Create Jenkins Pipeline
 
 #### Jenkinsfile:
-```groovy
-pipeline {
+```pipeline {
     agent any
-    
-    tools {
-        nodejs 'NodeJS-18'
-    }
-    
+
     environment {
-        DOCKER_HUB_CREDENTIALS = credentials('dockerhub-token')
-        DOCKER_IMAGE = 'your-dockerhub-username/auto-infra-dashboard'
+        DOCKER_IMAGE = "auto-infra-dashboard"
+        TAG = "10"
+        DOCKERHUB_REPO = "ashutosh1201/auto-infra-dashboard"
     }
-    
+
     stages {
-        stage('Clone Repository') {
+        stage('Clone') {
             steps {
-                git branch: 'main', url: 'https://github.com/YOUR-USERNAME/auto-infra-dashboard.git'
+                echo 'Cloning repo...'
+                git url: 'https://github.com/Ashu-tosh1/auto-infra-dashboard.git', branch: 'main'
             }
         }
-        
-        stage('Install Dependencies') {
-            steps {
-                bat 'npm install'
-            }
-        }
-        
-        stage('Build Application') {
-            steps {
-                bat 'npm run build'
-            }
-        }
-        
+
         stage('Build Docker Image') {
             steps {
-                script {
-                    bat "docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} ."
-                    bat "docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest"
-                }
+                echo 'Building Docker image...'
+                powershell script: '''
+                    $dockerImage = "$env:DOCKER_IMAGE"
+                    $tag = "$env:TAG"
+                    
+                    Write-Host "Building Docker image: $dockerImage`:$tag"
+                    docker build -t "$dockerImage`:$tag" .
+                    
+                    if ($LASTEXITCODE -ne 0) {
+                        Write-Host "Docker build failed with exit code $LASTEXITCODE"
+                        exit 1
+                    }
+                    
+                    Write-Host "Docker image built successfully with tag: $dockerImage`:$tag"
+                '''
             }
         }
-        
-        stage('Push to DockerHub') {
+
+        stage('Push to Docker Hub') {
             steps {
-                script {
-                    bat "docker login -u ${DOCKER_HUB_CREDENTIALS_USR} -p ${DOCKER_HUB_CREDENTIALS_PSW}"
-                    bat "docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}"
-                    bat "docker push ${DOCKER_IMAGE}:latest"
-                }
-            }
-        }
-        
-        stage('Deploy Application') {
-            steps {
-                script {
-                    bat '''
-                        docker rm -f auto-infra-app || echo "Container not found"
-                        docker run -d -p 3002:3002 --name auto-infra-app %DOCKER_IMAGE%:latest
+                echo 'Pushing Docker image to Docker Hub...'
+                withCredentials([usernamePassword(credentialsId: 'docker-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    powershell script: '''
+                        $dockerImage = "$env:DOCKER_IMAGE"
+                        $tag = "$env:TAG"
+                        $dockerHubRepo = "$env:DOCKERHUB_REPO"
+
+                        Write-Host "Logging into Docker Hub as user: $env:DOCKER_USER"
+                        
+                        # Use docker login with explicit parameters
+                        $loginResult = docker login -u "$env:DOCKER_USER" -p "$env:DOCKER_PASS" 2>&1
+                        
+                        if ($LASTEXITCODE -ne 0) {
+                            Write-Host "Docker login failed! Error: $loginResult"
+                            Write-Host "Please check your Docker Hub credentials in Jenkins"
+                            exit 1
+                        }
+                        
+                        Write-Host "Docker login successful!"
+
+                        Write-Host "Tagging image for Docker Hub..."
+                        docker tag "$dockerImage`:$tag" "$dockerHubRepo`:$tag"
+                        
+                        if ($LASTEXITCODE -ne 0) {
+                            Write-Host "Docker tag failed!"
+                            exit 1
+                        }
+
+                        Write-Host "Pushing image to Docker Hub: $dockerHubRepo`:$tag"
+                        docker push "$dockerHubRepo`:$tag"
+
+                        if ($LASTEXITCODE -ne 0) {
+                            Write-Host "Docker push failed!"
+                            exit 1
+                        } else {
+                            Write-Host "Image pushed successfully to Docker Hub!"
+                        }
+                        
+                        # Logout for security
+                        docker logout
                     '''
                 }
             }
         }
+
+        stage('Deploy Container') {
+            steps {
+                echo 'Deploying container...'
+                powershell script: '''
+                    $dockerHubRepo = "$env:DOCKERHUB_REPO"
+                    $tag = "$env:TAG"
+                    $containerName = "auto-infra-container"
+                    $hostPort = "3002"
+                    $containerPort = "3000"
+                    
+                    Write-Host "Checking if port $hostPort is in use..."
+                    $portInUse = netstat -ano | findstr ":$hostPort"
+                    if ($portInUse) {
+                        Write-Host "Port $hostPort is in use. Attempting to find and remove conflicting containers..."
+                        $containersUsingPort = docker ps -q --filter "publish=$hostPort"
+                        if ($containersUsingPort) {
+                            Write-Host "Found containers using port $hostPort. Stopping them..."
+                            docker stop $containersUsingPort
+                            docker rm $containersUsingPort
+                        }
+                    }
+                    
+                    Write-Host "Stopping and removing old container if it exists..."
+                    docker stop $containerName 2>$null
+                    docker rm $containerName 2>$null
+                    
+                    Write-Host "Starting new container from Docker Hub image..."
+                    docker run -d --name $containerName -p "$hostPort`:$containerPort" "$dockerHubRepo`:$tag"
+                    
+                    if ($LASTEXITCODE -ne 0) {
+                        Write-Host "Container deployment failed!"
+                        exit 1
+                    } else {
+                        Write-Host "Container successfully deployed on port $hostPort!"
+                        Write-Host "Application should be accessible at http://localhost:$hostPort"
+                    }
+                '''
+            }
+        }
     }
-    
+
     post {
         always {
-            bat 'docker logout'
+            echo 'Cleaning up...'
+            powershell script: '''
+                Write-Host "Running cleanup..."
+                docker system prune -f
+                Write-Host "Cleanup completed."
+            '''
         }
         success {
             echo 'Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed!'
+            echo 'Pipeline failed. Check the logs for details.'
         }
     }
 }
