@@ -1,197 +1,505 @@
-docker build -t auto-infra-dashboard .
-
 # Auto Infra Dashboard - DevOps Deployment on EC2
 
 A full-stack Next.js application deployed on an EC2 instance with Docker and CI/CD using Jenkins.
 
 ---
 
+# 🚀 Auto-Infra Dashboard
+
+An automated infrastructure dashboard for real-time monitoring, planning, and DevOps pipeline visualization using modern technologies and containerized deployment.
+
+---
+
 ## 📦 Tech Stack
 
-- **Frontend & Backend**: Next.js
-- **Runtime**: Node.js via NVM
-- **Containerization**: Docker
-- **CI/CD**: Jenkins (with Jenkinsfile)
-- **Version Control**: Git + GitHub
-- **Server**: AWS EC2 (Ubuntu)
+| Layer              | Technology                         |
+|--------------------|-------------------------------------|
+| Frontend & Backend | **Next.js (Full-stack React)**      |
+| Runtime            | **Node.js** (via NVM)               |
+| Containerization   | **Docker**                          |
+| Container Registry | **DockerHub**                       |
+| CI/CD              | **Jenkins** (configured via Jenkinsfile) |
+| Monitoring         | **Prometheus + Grafana**            |
+| Version Control    | **Git + GitHub**                    |
+| Hosting/Infra      | **AWS EC2 (Ubuntu 22.04 LTS)**      |
 
 ---
 
-## 🛠️ 1. EC2 Instance Setup
+## 🚀 Port details
+* **Frontend**: `3002`
+* **Backend**: `3002`
+* **API**: `3002/api`
+* **Docker**: `3002:3002`
+* **Jenkins**: `8080`
+* **EC2**: `22` (SSH)
+* **prometheus**: `9090` 
+* **Grafana**: `3010` 
 
-1. Launch an EC2 instance (Ubuntu 22.04).
-2. Create and download a key pair (`devops_project.pem`).
-3. Update security group to allow:
-   - Port `22` (SSH)
-   - Port `8080` (Jenkins)
-   - Port `3002` (Next.js app)
-
----
-
-## 🔐 2. SSH Access via VS Code / Putty
-
-### ✅ Using PuTTY:
-
-1. Convert `devops_project.pem` to `.ppk` using **PuTTYgen**.
-2. Use PuTTY to SSH into EC2 with:
-   ```
-   Host: <EC2-IP>
-   Port: 22
-   Auth > Private Key File: devops_project.ppk
-   ```
-
-### ✅ Using VS Code Remote SSH:
-
-1. Install the **Remote - SSH** extension.
-2. Add a new config in `.ssh/config`:
-   ```ssh
-   Host ec2-devops
-     HostName <EC2-IP>
-     User ubuntu
-     IdentityFile ~/.ssh/devops_project.pem
-   ```
 
 ---
 
-## 🌐 3. Installing Node.js using NVM
+## 🛠️ 1. EC2 Instance Setup (AWS Free Tier)
+
+Follow these steps to launch and configure a free-tier EC2 instance to host the Auto-Infra Dashboard:
+
+### ✅ Step 1: Launch EC2 Instance
+
+1. Log in to the [AWS Management Console](https://console.aws.amazon.com/).
+2. Navigate to **EC2 Dashboard** → Click **Launch Instance**.
+3. Configure instance:
+   - **Name**: `devops-dashboard`
+   - **AMI**: Ubuntu Server 22.04 LTS (Free Tier eligible)
+   - **Instance Type**: `t2.micro` (Free Tier eligible)
+
+---
+
+### 🔑 Step 2: Create SSH Key Pair
+
+1. In the **Key pair (login)** section:
+   - Click **Create new key pair**
+   - **Name**: `devops_project`
+   - **Type**: RSA
+   - **Format**: `.pem`
+2. Download `devops_project.pem` and store it securely.
+
+---
+
+### 🔐 Step 3: Configure Security Group
+
+Add the following **inbound rules** to your security group:
+
+| Type        | Protocol | Port Range | Source        | Description            |
+|-------------|----------|------------|----------------|------------------------|
+| SSH         | TCP      | 22         | My IP          | For SSH access         |
+| HTTP        | TCP      | 80         | Anywhere       | (Optional) Web Access  |
+| Custom TCP  | TCP      | 3002-3002  | Anywhere       | Dashboard/Service Ports|
+
+---
+
+### 💾 Step 4: Storage Configuration
+
+- **Volume**: 8 GiB (default gp2 SSD)
+- This configuration is free-tier eligible.
+
+---
+
+### 🚀 Step 5: Launch & Connect
+
+1. Click **Launch Instance**.
+2. Once running, go to **Instances → Connect**.
+3. Use the following command to SSH:
 
 ```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-source ~/.bashrc
-nvm install --lts
-```
+chmod 400 devops_project.pem
+ssh -i "devops_project.pem" ubuntu@<your-ec2-public-ip>
 
 ---
 
-## 📥 4. Cloning the Repository
 
+## 🔐 2. SSH Access via Terminal & Running the Docker Image
+
+1. **Open your terminal** and navigate to the directory where your key pair (`devops_project.pem`) is saved.
+
+2. **Modify permissions** on the PEM file (if not already done):
+   ```bash
+   chmod 400 devops_project.pem
+   ```
+
+3. **SSH into your EC2 instance**:
+   ```bash
+   ssh -i devops_project.pem ubuntu@<your-ec2-public-ip>
+   ```
+
+4. **Ensure Docker is installed and running**:
+   ```bash
+   sudo systemctl start docker
+   sudo systemctl enable docker
+   docker --version
+   ```
+
+5. **Pull the prebuilt Docker image from DockerHub**:
+   ```bash
+   docker pull ashutosh1201/auto-infra-dashboard:10
+   ```
+
+6. **Run the Docker container and expose it on port 3002**:
+   ```bash
+   docker run -d -p 3002:3002 --name auto-infra-dashboard ashutosh1201/auto-infra-dashboard:10
+   ```
+
+7. **Verify the container is running**:
+   ```bash
+   docker ps
+   ```
+
+8. **Access the dashboard** via your browser at:
+   ```
+   http://<your-ec2-public-ip>:3002
+   ```
+
+
+---
+
+### Software Requirements
+- **Node.js** (v18 or higher)
+- **Docker Desktop** for Windows
+- **Git** for Windows
+- **Jenkins** (local installation)
+- **Grafana** (local installation)
+- **Prometheus** (local installation)
+
+### Accounts Required
+- GitHub account
+- DockerHub account
+
+---
+
+## 💻 Local Development Setup
+
+### Step 1: Create Next.js Dashboard
 ```bash
-git clone https://github.com/<your-username>/auto-infra-dashboard.git
+# Create new Next.js project
+npx create-next-app@latest auto-infra-dashboard
 cd auto-infra-dashboard
+
+# Install additional dependencies
+npm install axios recharts lucide-react
+
+# Start development server
+npm run dev
+```
+
+### Step 2: Develop Dashboard Features
+Create your dashboard components with API integrations:
+- Infrastructure monitoring widgets
+- Real-time data visualization
+- System metrics display
+- Status indicators
+
+### Step 3: Test Locally
+```bash
+# Run on development mode
+npm run dev
+
+# Access at: http://localhost:3000
 ```
 
 ---
 
-## 🐳 5. Docker Setup & App Containerization
+## 📁 GitHub Repository Setup
 
-### Dockerfile
+### Step 1: Initialize Git Repository
+```bash
+# Initialize git in project directory
+git init
+
+# Add all files
+git add .
+
+# Initial commit
+git commit -m "Initial commit: Next.js dashboard setup"
+```
+
+### Step 2: Create GitHub Repository
+1. Go to GitHub.com
+2. Click "New Repository"
+3. Name: `auto-infra-dashboard`
+4. Make it public/private as needed
+5. Don't initialize with README (already have local files)
+
+### Step 3: Push to GitHub
+```bash
+# Add remote origin
+git remote add origin https://github.com/<YOUR-USERNAME>/auto-infra-dashboard.git
+
+# Push to main branch
+git branch -M main
+git push -u origin main
+```
+
+---
+
+## 🐳 Docker Containerization
+
+### Step 1: Create Dockerfile
+Create `Dockerfile` in project root:
 
 ```dockerfile
-# Stage 1: Build
+# Stage 1: Build the Next.js app
 FROM node:18-alpine AS builder
+
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install
 COPY . .
 RUN npm run build
 
-# Stage 2: Run
+# Stage 2: Run the app
 FROM node:18-alpine
 WORKDIR /app
 COPY --from=builder /app ./
+
 ENV PORT=3002
 EXPOSE 3002
+
 CMD ["npm", "start"]
 ```
 
-### Build and Run Docker Container
-
+### Step 2: Create .dockerignore
 ```bash
-sudo usermod -aG docker $USER
-newgrp docker
+node_modules
+.next
+.git
+.gitignore
+README.md
+Dockerfile
+.dockerignore
+npm-debug.log
+.nyc_output
+.coverage
+.env.local
+```
 
+### Step 3: Build and Test Docker Image
+```bash
 docker build -t auto-infra-dashboard .
 docker run -d -p 3002:3002 --name auto-infra-app auto-infra-dashboard
-```
 
-Access your app via: `http://<EC2-IP>:3002`
-
----
-
-## ⚙️ 6. Jenkins Installation & Setup
-
-```bash
-curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee   /usr/share/keyrings/jenkins-keyring.asc > /dev/null
-
-echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc]   https://pkg.jenkins.io/debian-stable binary/ | sudo tee   /etc/apt/sources.list.d/jenkins.list > /dev/null
-
-sudo apt update
-sudo apt install jenkins -y
-sudo systemctl enable jenkins
-sudo systemctl start jenkins
-```
-
-Access Jenkins at: `http://<EC2-IP>:8080`
-
-### Unlock Admin
-
-```bash
-sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+# Access at: http://localhost:3002
 ```
 
 ---
 
-## 🔁 7. CI/CD Pipeline using Jenkinsfile
+## ⚙️ Jenkins CI/CD Pipeline
 
-### Jenkinsfile (in GitHub repo)
+### Step 1: Install Jenkins on Windows
 
+#### Option A: Download Jenkins WAR
+```bash
+java -jar jenkins.war --httpPort=8080
+```
+
+#### Option B: Install as Windows Service
+Follow official instructions to install Jenkins as a service.
+
+### Step 2: Initial Jenkins Setup
+- Access: `http://localhost:8080`
+- Admin password path: `C:\Users\{username}\.jenkins\secrets\initialAdminPassword`
+
+### Step 3: Install Required Plugins
+Install:
+- Git Plugin
+- Docker Pipeline Plugin
+- GitHub Integration Plugin
+- Pipeline Plugin
+- NodeJS Plugin
+
+### Step 4: Configure Global Tools
+Configure Git and Node.js in Jenkins → Global Tool Configuration.
+
+### Step 5: Create Jenkins Pipeline
+
+#### Jenkinsfile:
 ```groovy
 pipeline {
     agent any
-
+    
+    tools {
+        nodejs 'NodeJS-18'
+    }
+    
+    environment {
+        DOCKER_HUB_CREDENTIALS = credentials('dockerhub-token')
+        DOCKER_IMAGE = 'your-dockerhub-username/auto-infra-dashboard'
+    }
+    
     stages {
-        stage('Clone Repo') {
+        stage('Clone Repository') {
             steps {
-                git 'https://github.com/<your-username>/auto-infra-dashboard.git'
+                git branch: 'main', url: 'https://github.com/YOUR-USERNAME/auto-infra-dashboard.git'
             }
         }
-
+        
+        stage('Install Dependencies') {
+            steps {
+                bat 'npm install'
+            }
+        }
+        
+        stage('Build Application') {
+            steps {
+                bat 'npm run build'
+            }
+        }
+        
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t auto-infra-dashboard .'
+                script {
+                    bat "docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} ."
+                    bat "docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest"
+                }
             }
         }
-
-        stage('Run Docker Container') {
+        
+        stage('Push to DockerHub') {
             steps {
-                sh '''
-                  docker rm -f auto-infra-app || true
-                  docker run -d -p 3002:3002 --name auto-infra-app auto-infra-dashboard
-                '''
+                script {
+                    bat "docker login -u ${DOCKER_HUB_CREDENTIALS_USR} -p ${DOCKER_HUB_CREDENTIALS_PSW}"
+                    bat "docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}"
+                    bat "docker push ${DOCKER_IMAGE}:latest"
+                }
             }
+        }
+        
+        stage('Deploy Application') {
+            steps {
+                script {
+                    bat '''
+                        docker rm -f auto-infra-app || echo "Container not found"
+                        docker run -d -p 3002:3002 --name auto-infra-app %DOCKER_IMAGE%:latest
+                    '''
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            bat 'docker logout'
+        }
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
         }
     }
 }
 ```
 
-### Jenkins Setup Steps
-
-1. Install Jenkins plugins: Git, Docker Pipeline, etc.
-2. Create a new **Pipeline job**.
-3. Point it to your GitHub repo.
-4. Run build manually or set up GitHub webhook for auto-deploy.
+### Step 6: Jenkins Job
+Use Pipeline script from SCM → Git → main → Jenkinsfile
 
 ---
 
-## 🔍 Verification
+## 🐋 DockerHub Integration
 
-- Visit `http://<EC2-IP>:3002` for app
-- Visit `http://<EC2-IP>:8080` for Jenkins
+### Step 1: Create Account and Repo
 
----
+### Step 2: Generate Access Token
 
-## 🧹 Notes
+### Step 3: Jenkins Credentials
+Kind: `Username with password`, ID: `dockerhub-token`
 
-- Always open required ports in EC2 security groups.
-- To rebuild with changes:
-  ```bash
-  docker build -t auto-infra-dashboard .
-  docker restart auto-infra-app
-  ```
-- For automatic deployment, configure GitHub Webhooks with your Jenkins URL.
+### Step 4: Update Jenkinsfile
 
 ---
+
+## 📊 Monitoring with Grafana & Prometheus
+
+### Prometheus
+Configure `prometheus.yml` and run Prometheus.
+
+### Node Exporter
+Run `node_exporter.exe`
+
+### Grafana
+Run and access at `http://localhost:3000`
+
+- Add Prometheus as a Data Source
+- Import dashboard ID `1860`
+- Create panels for system and app metrics
 
 ## 🙌 You're Done!
 
 This setup provides a real-world DevOps pipeline using GitHub, Jenkins, Docker, and an EC2 instance for production deployment.
+
+---
+
+## 📸 8. Screenshots
+
+### 🔧 Jenkins CI/CD Pipeline
+
+> Jenkins automatically pulls code from GitHub, builds a Docker image, and runs your Next.js app inside a container.
+
+![Jenkins CI/CD Pipeline](![alt text](image-2.png)) <sub>*Fig 1. Jenkins running multi-stage CI/CD pipeline for Auto Infra Dashboard*</sub>
+
+---
+
+### 🌐 EC2 and  Security Group Rules
+
+> Ensuring open ports for SSH, Jenkins, and the app.
+
+![EC2 Security Groups](![alt text](image-4.png)) <sub>*Fig 2. EC2 instance security group allowing ports 22, 8080, and 3002*</sub>
+
+---
+
+
+### 💻 Live App on EC2 (Port 3002)
+
+> The dashboard is successfully running inside a Docker container on EC2.
+![alt text](image-1.png)
+![Auto Infra Dashboard UI](![alt text](image.png)) <sub>*Fig 3. Accessible Next.js App deployed via Docker on EC2*</sub>
+
+---
+### 💻 DockerHub 
+
+> The repositry is successfully executed and Docker image is stored.
+![alt text](image-1.png)
+![Auto Infra Dashboard UI](![alt text](image-5.png)) <sub>*Fig 4.DockerHUB*</sub>
+
+---
+
+### 📦Locally running Docker 
+
+
+![Docker Running Container](![alt text](image-6.png)) <sub>*Fig 5.Local  Docker Container for `auto-infra-dashboard` running on port 3002*</sub>
+
+---
+
+
+### 📦 Docker Container List
+
+> Validating containerized deployment.
+Docker pull 
+``` docker pull ashutosh1201/auto-infra-dashboard:10```
+
+Container run
+``` docker run -d -p 3002:3002 --name auto-infra-dashboard ashutosh1201/auto-infra-dashboard:10 ```
+
+```bash
+docker ps
+```
+
+![Docker Running Container](![alt text](image-3.png)) <sub>*Fig 6. Docker container for `auto-infra-dashboard` running on port 3002*</sub>
+
+---
+
+
+
+
+<!-- ### ⚙️ Jenkins Configuration
+
+> Setting up the Jenkins pipeline and defining GitHub repo integration.
+
+![Jenkins Job Config](https://user-images.githubusercontent.com/your-username/jenkins-job-config.png) <sub>*Fig 4. Jenkins job configured to auto-deploy from GitHub repository*</sub>
+
+--- -->
+
+### 🌐 EC2 Security Group Rules
+
+> Ensuring open ports for SSH, Jenkins, and the app.
+
+![EC2 Security Groups](https://user-images.githubusercontent.com/your-username/ec2-security-group.png) <sub>*Fig 5. EC2 instance security group allowing ports 22, 8080, and 3002*</sub>
+
+---
+
+<!-- 
+### 📂 GitHub Webhook (Optional)
+
+> GitHub can automatically trigger Jenkins builds on code push.
+
+![GitHub Webhook](https://user-images.githubusercontent.com/your-username/github-webhook.png) <sub>*Fig 6. GitHub Webhook triggering Jenkins build on code changes*</sub>
+
+--- -->
+
