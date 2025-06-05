@@ -555,6 +555,12 @@ docker ps
 
 ---
 
+![alt text](grafana1.png)
+![alt text](cadvisor.png)
+![alt text](cadvisor2.png)
+![alt text](cadvisor3.png)
+![alt text](cadvisor4.png)
+![alt text](prometheus.png)
 
 
 
