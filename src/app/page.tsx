@@ -1,7 +1,10 @@
 "use client"
 import React, { useState } from 'react';
-import { Plus,  CheckCircle, Circle, Trash2, Calendar } from 'lucide-react';
+import { Plus,  CheckCircle, Circle, Trash2 } from 'lucide-react';
 import Navigation from '@/components/DashboardNavigation';
+import Header from '@/components/Header';
+import ScheduleTab from '@/components/ScheduleTab';
+// import ScheduleItemComponent from '@/components/ScheduleItem';
 
 // Types
 interface ScheduleItem {
@@ -56,165 +59,15 @@ const quadrants: Record<QuadrantKey, Quadrant> = {
 };
 
 // Header Component
-interface HeaderProps {
-  completionRate: number;
-  currentDate: string;
-  onDateChange: (date: string) => void;
-}
 
-const Header: React.FC<HeaderProps> = ({ completionRate, currentDate, onDateChange }) => (
-  <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-    <div className="flex justify-between items-center">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-800">Day Planning Dashboard</h1>
-        <p className="text-gray-600 mt-1">Plan, prioritize, and achieve your daily goals</p>
-      </div>
-      <div className="flex items-center space-x-4">
-        <div className="bg-indigo-100 px-4 py-2 rounded-lg">
-          <span className="text-indigo-800 font-semibold">{completionRate}% Complete</span>
-        </div>
-        <input
-          type="date"
-          value={currentDate}
-          onChange={(e) => onDateChange(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
-    </div>
-  </div>
-);
 
 // Navigation Component
 {/* <Navigation activeTab={activeTab} onTabChange={setActiveTab} /> */}
 
 // Schedule Item Component
-interface ScheduleItemProps {
-  item: ScheduleItem;
-  onToggleComplete: (id: number) => void;
-  onDelete: (id: number) => void;
-}
 
-const ScheduleItemComponent: React.FC<ScheduleItemProps> = ({ item, onToggleComplete, onDelete }) => (
-  <div className={`flex items-center space-x-4 p-4 rounded-lg border-l-4 ${categories[item.category].color} ${
-    item.completed ? 'bg-gray-50 opacity-75' : 'bg-white border border-gray-200'
-  }`}>
-    <button
-      onClick={() => onToggleComplete(item.id)}
-      className="text-gray-400 hover:text-indigo-600 transition-colors"
-    >
-      {item.completed ? <CheckCircle size={20} className="text-green-500" /> : <Circle size={20} />}
-    </button>
-    <div className="text-sm font-medium text-gray-500 w-16">
-      {item.time}
-    </div>
-    <div className="flex-1">
-      <div className={`font-medium ${item.completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>
-        {item.task}
-      </div>
-      <div className="text-sm text-gray-500">
-        {item.duration} minutes • {categories[item.category].label}
-      </div>
-    </div>
-    <button
-      onClick={() => onDelete(item.id)}
-      className="text-gray-400 hover:text-red-500 transition-colors"
-    >
-      <Trash2 size={18} />
-    </button>
-  </div>
-);
 
 // Schedule Tab Component
-interface ScheduleTabProps {
-  scheduleItems: ScheduleItem[];
-  currentDate: string;
-  onAddItem: (item: Omit<ScheduleItem, 'id' | 'completed'>) => void;
-  onToggleComplete: (id: number) => void;
-  onDeleteItem: (id: number) => void;
-}
-
-const ScheduleTab: React.FC<ScheduleTabProps> = ({
-  scheduleItems,
-  currentDate,
-  onAddItem,
-  onToggleComplete,
-  onDeleteItem
-}) => {
-  const [newItem, setNewItem] = useState({ time: '', task: '', duration: 60, category: 'work' as CategoryKey });
-
-  const handleAddItem = () => {
-    if (newItem.time && newItem.task) {
-      onAddItem(newItem);
-      setNewItem({ time: '', task: '', duration: 60, category: 'work' });
-    }
-  };
-
-  return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Daily Schedule</h2>
-        <div className="flex items-center space-x-2">
-          <Calendar size={20} className="text-gray-500" />
-          <span className="text-gray-600">
-            {new Date(currentDate).toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </span>
-        </div>
-      </div>
-      
-      <div className="bg-gray-50 rounded-lg p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <input
-            type="time"
-            value={newItem.time}
-            onChange={(e) => setNewItem({...newItem, time: e.target.value})}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <input
-            type="text"
-            placeholder="Task description"
-            value={newItem.task}
-            onChange={(e) => setNewItem({...newItem, task: e.target.value})}
-            className="md:col-span-2 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <select
-            value={newItem.category}
-            onChange={(e) => setNewItem({...newItem, category: e.target.value as CategoryKey})}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            {Object.entries(categories).map(([key, cat]) => (
-              <option key={key} value={key}>{cat.label}</option>
-            ))}
-          </select>
-          <button
-            onClick={handleAddItem}
-            className="flex items-center justify-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            <Plus size={18} />
-            <span>Add</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        {scheduleItems
-          .sort((a, b) => a.time.localeCompare(b.time))
-          .map(item => (
-            <ScheduleItemComponent
-              key={item.id}
-              item={item}
-              onToggleComplete={onToggleComplete}
-              onDelete={onDeleteItem}
-            />
-          ))}
-      </div>
-    </div>
-  );
-};
 
 // Task Component
 interface TaskComponentProps {
@@ -469,7 +322,7 @@ const DayPlanningDashboard: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
   
   // Schedule State
-  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([   
     { id: 1, time: '09:00', duration: 60, task: 'Morning Planning', category: 'work', completed: false },
     { id: 2, time: '10:00', duration: 90, task: 'Project Development', category: 'work', completed: false },
     { id: 3, time: '14:00', duration: 30, task: 'Lunch Break', category: 'personal', completed: false },
