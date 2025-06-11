@@ -1,36 +1,14 @@
 import { Calendar, Plus } from "lucide-react";
 import { useState } from "react";
 import ScheduleItemComponent from "./ScheduleItem";
+import { Category, CategoryKey, ScheduleTabProps } from "@/libs/Mockdata";
 
-type CategoryKey = 'work' | 'personal' | 'health' | 'learning';
-
-interface ScheduleItem {
-  id: number;
-  time: string;
-  duration: number;
-  task: string;
-  category: CategoryKey;
-  completed: boolean;
-}
-
-interface ScheduleTabProps {
-  scheduleItems: ScheduleItem[];
-  currentDate: string;
-  onAddItem: (item: Omit<ScheduleItem, 'id' | 'completed'>) => void;
-  onToggleComplete: (id: number) => void;
-  onDeleteItem: (id: number) => void;
-}
 const categories: Record<CategoryKey, Category> = {
   work: { color: 'bg-blue-500', label: 'Work' },
   personal: { color: 'bg-green-500', label: 'Personal' },
   health: { color: 'bg-red-500', label: 'Health' },
   learning: { color: 'bg-purple-500', label: 'Learning' }
 };
-
-interface Category {
-  color: string;
-  label: string;
-}
 
 const ScheduleTab: React.FC<ScheduleTabProps> = ({
   scheduleItems,

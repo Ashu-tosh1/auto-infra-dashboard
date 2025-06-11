@@ -1,14 +1,7 @@
+import { Quadrant, QuadrantKey, Task, TaskComponentProps } from "@/libs/Mockdata";
 import { Circle } from "lucide-react";
 import { CheckCircle, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
-
-
-type QuadrantKey = 'urgent_important' | 'not_urgent_important' | 'urgent_not_important' | 'not_urgent_not_important';
-interface Quadrant {
-    title: string;
-    color: string;
-  }
-
 
 const quadrants: Record<QuadrantKey, Quadrant> = {
     urgent_important: { title: 'Urgent & Important', color: 'border-red-300 bg-red-50' },
@@ -16,20 +9,7 @@ const quadrants: Record<QuadrantKey, Quadrant> = {
     urgent_not_important: { title: 'Urgent, Not Important', color: 'border-orange-300 bg-orange-50' },
     not_urgent_not_important: { title: 'Neither Urgent nor Important', color: 'border-gray-300 bg-gray-50' }
   };
-  
-
-  interface Task {
-    id: number;
-    text: string;
-    completed: boolean;
-  }
-
-interface TaskComponentProps {
-    task: Task;
-    onToggleComplete: () => void;
-    onDelete: () => void;
-  }
-  
+    
   const TaskComponent: React.FC<TaskComponentProps> = ({ task, onToggleComplete, onDelete }) => (
     <div className="flex items-center space-x-3 p-2 bg-white rounded-lg shadow-sm">
       <button

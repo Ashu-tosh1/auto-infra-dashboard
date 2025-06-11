@@ -1,6 +1,7 @@
+import { Category, CategoryKey, ScheduleItemProps } from "@/libs/Mockdata";
 import { CheckCircle, Circle, Trash2 } from "lucide-react";
 
-type CategoryKey = 'work' | 'personal' | 'health' | 'learning';
+
 
 const categories: Record<CategoryKey, Category> = {
   work: { color: 'bg-blue-500', label: 'Work' },
@@ -9,24 +10,7 @@ const categories: Record<CategoryKey, Category> = {
   learning: { color: 'bg-purple-500', label: 'Learning' }
 };
 
-interface Category {
-  color: string;
-  label: string;
-}
-interface ScheduleItem {
-  id: number;
-  time: string;
-  duration: number;
-  task: string;
-  category: CategoryKey;
-  completed: boolean;
-}
 
-interface ScheduleItemProps {
-  item: ScheduleItem;
-  onToggleComplete: (id: number) => void;
-  onDelete: (id: number) => void;
-}
 
 const ScheduleItemComponent: React.FC<ScheduleItemProps> = ({ item, onToggleComplete, onDelete }) => (
   <div className={`flex items-center space-x-4 p-4 rounded-lg border-l-4 ${categories[item.category].color} ${
