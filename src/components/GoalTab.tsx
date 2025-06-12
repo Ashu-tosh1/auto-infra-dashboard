@@ -1,27 +1,6 @@
+import { categories, CategoryKey, Goal, GoalColumnKey } from "@/libs/Mockdata";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
-
-interface Category {
-    color: string;
-    label: string;
-  }
-  
-  interface Goal {
-    id: number;
-    text: string;
-    category: CategoryKey;
-  }
-  
-type CategoryKey = 'work' | 'personal' | 'health' | 'learning';
-type GoalColumnKey = 'backlog' | 'today' | 'in_progress' | 'completed';
-  
-  // Constants
-  const categories: Record<CategoryKey, Category> = {
-    work: { color: 'bg-blue-500', label: 'Work' },
-    personal: { color: 'bg-green-500', label: 'Personal' },
-    health: { color: 'bg-red-500', label: 'Health' },
-    learning: { color: 'bg-purple-500', label: 'Learning' }
-  };
 
 interface GoalComponentProps {
     goal: Goal;

@@ -58,3 +58,11 @@ export interface ScheduleTabProps {
   onToggleComplete: (id: number) => void;
   onDeleteItem: (id: number) => void;
 }
+
+
+export const categories: Record<CategoryKey, Category> = {
+      work: { color: 'bg-blue-500', label: 'Work' },
+      personal: { color: 'bg-green-500', label: 'Personal' },
+      health: { color: 'bg-red-500', label: 'Health' },
+      learning: { color: 'bg-purple-500', label: 'Learning' }
+    };
