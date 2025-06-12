@@ -17,7 +17,6 @@ const DayPlanningDashboard: React.FC = () => {
       { id: 2, time: '10:00', duration: 90, task: 'Project Development', category: 'work', completed: false },
       { id: 3, time: '14:00', duration: 30, task: 'Lunch Break', category: 'personal', completed: false },
     ]);
-    
     // Tasks State
     const [tasks, setTasks] = useState<Record<QuadrantKey, Task[]>>({
       urgent_important: [

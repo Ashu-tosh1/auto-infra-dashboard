@@ -1,10 +1,10 @@
+import { TabKey } from "@/libs/Mockdata";
 import { Clock, Target, TrendingUp } from "lucide-react";
 
 interface NavigationProps {
   activeTab: TabKey;
   onTabChange: (tab: TabKey) => void;
 }
-type TabKey = 'schedule' | 'priority' | 'goals';
 
 const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
    

@@ -1,16 +1,12 @@
 import { Category, CategoryKey, ScheduleItemProps } from "@/libs/Mockdata";
 import { CheckCircle, Circle, Trash2 } from "lucide-react";
 
-
-
 const categories: Record<CategoryKey, Category> = {
   work: { color: 'bg-blue-500', label: 'Work' },
   personal: { color: 'bg-green-500', label: 'Personal' },
   health: { color: 'bg-red-500', label: 'Health' },
   learning: { color: 'bg-purple-500', label: 'Learning' }
 };
-
-
 
 const ScheduleItemComponent: React.FC<ScheduleItemProps> = ({ item, onToggleComplete, onDelete }) => (
   <div className={`flex items-center space-x-4 p-4 rounded-lg border-l-4 ${categories[item.category].color} ${
