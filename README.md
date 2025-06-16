@@ -96,7 +96,7 @@ ssh -i "devops_project.pem" ubuntu@<your-ec2-public-ip>
 ---
 
 
-## 🔐 2. SSH Access via Terminal & Running the Docker Image
+## 🔐 2. SSH Access via Terminal & Running the Docker /screenshots/Image
 
 1. **Open your terminal** and navigate to the directory where your key pair (`devops_project.pem`) is saved.
 
@@ -117,7 +117,7 @@ ssh -i "devops_project.pem" ubuntu@<your-ec2-public-ip>
    docker --version
    ```
 
-5. **Pull the prebuilt Docker image from DockerHub**:
+5. **Pull the prebuilt Docker /screenshots/image from DockerHub**:
    ```bash
    docker pull ashutosh1201/auto-infra-dashboard:10
    ```
@@ -274,7 +274,7 @@ npm-debug.log
 .env.local
 ```
 
-### Step 3: Build and Test Docker Image
+### Step 3: Build and Test Docker /screenshots/Image
 ```bash
 docker build -t auto-infra-dashboard .
 docker run -d -p 3002:3002 --name auto-infra-app auto-infra-dashboard
@@ -318,7 +318,7 @@ Configure Git and Node.js in Jenkins → Global Tool Configuration.
     agent any
 
     environment {
-        DOCKER_IMAGE = "auto-infra-dashboard"
+        DOCKER_/screenshots/IMAGE = "auto-infra-dashboard"
         TAG = "10"
         DOCKERHUB_REPO = "ashutosh1201/auto-infra-dashboard"
     }
@@ -331,32 +331,32 @@ Configure Git and Node.js in Jenkins → Global Tool Configuration.
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Docker /screenshots/Image') {
             steps {
-                echo 'Building Docker image...'
+                echo 'Building Docker /screenshots/image...'
                 powershell script: '''
-                    $dockerImage = "$env:DOCKER_IMAGE"
+                    $docker/screenshots/Image = "$env:DOCKER_/screenshots/IMAGE"
                     $tag = "$env:TAG"
                     
-                    Write-Host "Building Docker image: $dockerImage`:$tag"
-                    docker build -t "$dockerImage`:$tag" .
+                    Write-Host "Building Docker /screenshots/image: $docker/screenshots/Image`:$tag"
+                    docker build -t "$docker/screenshots/Image`:$tag" .
                     
                     if ($LASTEXITCODE -ne 0) {
                         Write-Host "Docker build failed with exit code $LASTEXITCODE"
                         exit 1
                     }
                     
-                    Write-Host "Docker image built successfully with tag: $dockerImage`:$tag"
+                    Write-Host "Docker /screenshots/image built successfully with tag: $docker/screenshots/Image`:$tag"
                 '''
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                echo 'Pushing Docker image to Docker Hub...'
+                echo 'Pushing Docker /screenshots/image to Docker Hub...'
                 withCredentials([usernamePassword(credentialsId: 'docker-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     powershell script: '''
-                        $dockerImage = "$env:DOCKER_IMAGE"
+                        $docker/screenshots/Image = "$env:DOCKER_/screenshots/IMAGE"
                         $tag = "$env:TAG"
                         $dockerHubRepo = "$env:DOCKERHUB_REPO"
 
@@ -373,22 +373,22 @@ Configure Git and Node.js in Jenkins → Global Tool Configuration.
                         
                         Write-Host "Docker login successful!"
 
-                        Write-Host "Tagging image for Docker Hub..."
-                        docker tag "$dockerImage`:$tag" "$dockerHubRepo`:$tag"
+                        Write-Host "Tagging /screenshots/image for Docker Hub..."
+                        docker tag "$docker/screenshots/Image`:$tag" "$dockerHubRepo`:$tag"
                         
                         if ($LASTEXITCODE -ne 0) {
                             Write-Host "Docker tag failed!"
                             exit 1
                         }
 
-                        Write-Host "Pushing image to Docker Hub: $dockerHubRepo`:$tag"
+                        Write-Host "Pushing /screenshots/image to Docker Hub: $dockerHubRepo`:$tag"
                         docker push "$dockerHubRepo`:$tag"
 
                         if ($LASTEXITCODE -ne 0) {
                             Write-Host "Docker push failed!"
                             exit 1
                         } else {
-                            Write-Host "Image pushed successfully to Docker Hub!"
+                            Write-Host "/screenshots/Image pushed successfully to Docker Hub!"
                         }
                         
                         # Logout for security
@@ -424,7 +424,7 @@ Configure Git and Node.js in Jenkins → Global Tool Configuration.
                     docker stop $containerName 2>$null
                     docker rm $containerName 2>$null
                     
-                    Write-Host "Starting new container from Docker Hub image..."
+                    Write-Host "Starting new container from Docker Hub /screenshots/image..."
                     docker run -d --name $containerName -p "$hostPort`:$containerPort" "$dockerHubRepo`:$tag"
                     
                     if ($LASTEXITCODE -ne 0) {
@@ -500,9 +500,9 @@ This setup provides a real-world DevOps pipeline using GitHub, Jenkins, Docker, 
 
 ### 🔧 Jenkins CI/CD Pipeline
 
-> Jenkins automatically pulls code from GitHub, builds a Docker image, and runs your Next.js app inside a container.
+> Jenkins automatically pulls code from GitHub, builds a Docker /screenshots/image, and runs your Next.js app inside a container.
 
-![Jenkins CI/CD Pipeline](![alt text](image-2.png)) <sub>*Fig 1. Jenkins running multi-stage CI/CD pipeline for Auto Infra Dashboard*</sub>
+![Jenkins CI/CD Pipeline](![alt text](/screenshots/image-2.png)) <sub>*Fig 1. Jenkins running multi-stage CI/CD pipeline for Auto Infra Dashboard*</sub>
 
 ---
 
@@ -510,7 +510,7 @@ This setup provides a real-world DevOps pipeline using GitHub, Jenkins, Docker, 
 
 > Ensuring open ports for SSH, Jenkins, and the app.
 
-![EC2 Security Groups](![alt text](image-4.png)) <sub>*Fig 2. EC2 instance security group allowing ports 22, 8080, and 3002*</sub>
+![EC2 Security Groups](![alt text](/screenshots/image-4.png)) <sub>*Fig 2. EC2 instance security group allowing ports 22, 8080, and 3002*</sub>
 
 ---
 
@@ -518,22 +518,22 @@ This setup provides a real-world DevOps pipeline using GitHub, Jenkins, Docker, 
 ### 💻 Live App on EC2 (Port 3002)
 
 > The dashboard is successfully running inside a Docker container on EC2.
-![alt text](image-1.png)
-![Auto Infra Dashboard UI](![alt text](image.png)) <sub>*Fig 3. Accessible Next.js App deployed via Docker on EC2*</sub>
+![alt text](/screenshots/image-1.png)
+![Auto Infra Dashboard UI](![alt text](/screenshots/image.png)) <sub>*Fig 3. Accessible Next.js App deployed via Docker on EC2*</sub>
 
 ---
 ### 💻 DockerHub 
 
-> The repositry is successfully executed and Docker image is stored.
-![alt text](image-1.png)
-![Auto Infra Dashboard UI](![alt text](image-5.png)) <sub>*Fig 4.DockerHUB*</sub>
+> The repositry is successfully executed and Docker /screenshots/image is stored.
+![alt text](/screenshots/image-1.png)
+![Auto Infra Dashboard UI](![alt text](/screenshots/image-5.png)) <sub>*Fig 4.DockerHUB*</sub>
 
 ---
 
 ### 📦Locally running Docker 
 
 
-![Docker Running Container](![alt text](image-6.png)) <sub>*Fig 5.Local  Docker Container for `auto-infra-dashboard` running on port 3002*</sub>
+![Docker Running Container](![alt text](/screenshots/image-6.png)) <sub>*Fig 5.Local  Docker Container for `auto-infra-dashboard` running on port 3002*</sub>
 
 ---
 
@@ -551,16 +551,16 @@ Container run
 docker ps
 ```
 
-![Docker Running Container](![alt text](image-3.png)) <sub>*Fig 6. Docker container for `auto-infra-dashboard` running on port 3002*</sub>
+![Docker Running Container](![alt text](/screenshots/image-3.png)) <sub>*Fig 6. Docker container for `auto-infra-dashboard` running on port 3002*</sub>
 
 ---
 
-![alt text](grafana1.png)
-![alt text](cadvisor.png)
-![alt text](cadvisor2.png)
-![alt text](cadvisor3.png)
-![alt text](cadvisor4.png)
-![alt text](prometheus.png)
+![alt text](/screenshots/grafana1.png)
+![alt text](/screenshots/cadvisor.png)
+![alt text](/screenshots/cadvisor2.png)
+![alt text](/screenshots/cadvisor3.png)
+![alt text](/screenshots/cadvisor4.png)
+![alt text](/screenshots/prometheus.png)
 
 
 
@@ -568,7 +568,7 @@ docker ps
 
 > Setting up the Jenkins pipeline and defining GitHub repo integration.
 
-![Jenkins Job Config](https://user-images.githubusercontent.com/your-username/jenkins-job-config.png) <sub>*Fig 4. Jenkins job configured to auto-deploy from GitHub repository*</sub>
+![Jenkins Job Config](https://user-/screenshots/images.githubusercontent.com/your-username/jenkins-job-config.png) <sub>*Fig 4. Jenkins job configured to auto-deploy from GitHub repository*</sub>
 
 --- -->
 
@@ -576,7 +576,7 @@ docker ps
 
 > Ensuring open ports for SSH, Jenkins, and the app.
 
-![EC2 Security Groups](https://user-images.githubusercontent.com/your-username/ec2-security-group.png) <sub>*Fig 5. EC2 instance security group allowing ports 22, 8080, and 3002*</sub>
+![EC2 Security Groups](https://user-/screenshots/images.githubusercontent.com/your-username/ec2-security-group.png) <sub>*Fig 5. EC2 instance security group allowing ports 22, 8080, and 3002*</sub>
 
 --- -->
 
@@ -585,7 +585,7 @@ docker ps
 
 > GitHub can automatically trigger Jenkins builds on code push.
 
-![GitHub Webhook](https://user-images.githubusercontent.com/your-username/github-webhook.png) <sub>*Fig 6. GitHub Webhook triggering Jenkins build on code changes*</sub>
+![GitHub Webhook](https://user-/screenshots/images.githubusercontent.com/your-username/github-webhook.png) <sub>*Fig 6. GitHub Webhook triggering Jenkins build on code changes*</sub>
 
 --- -->
 
