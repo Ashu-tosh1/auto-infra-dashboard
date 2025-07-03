@@ -60,6 +60,17 @@ export interface ScheduleTabProps {
 }
 
 
+export const scheduleItems: ScheduleItem[] = [
+    { id: 1, time: '09:00', duration: 60, task: 'Work on project', category: 'work', completed: false },
+    { id: 2, time: '10:00', duration: 30, task: 'Gym', category: 'health', completed: false },
+    { id: 3, time: '11:00', duration: 45, task: 'Read book', category: 'learning', completed: false },
+    { id: 4, time: '12:00', duration: 60, task: 'Lunch with friends', category: 'personal', completed: false },
+    { id: 5, time: '13:00', duration: 30, task: 'Call mom', category: 'personal', completed: false },
+    { id: 6, time: '14:00', duration: 45, task: 'Study for exam', category: 'learning', completed: false },
+];
+
+
+
 export const categories: Record<CategoryKey, Category> = {
       work: { color: 'bg-blue-500', label: 'Work' },
       personal: { color: 'bg-green-500', label: 'Personal' },
