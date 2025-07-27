@@ -4,7 +4,6 @@ export type GoalColumnKey = 'backlog' | 'today' | 'in_progress' | 'completed';
 export type TabKey = 'schedule' | 'priority' | 'goals';
 
 
-
 export interface ScheduleItem {
     id: number;
     time: string;
