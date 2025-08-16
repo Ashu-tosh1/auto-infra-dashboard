@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   prometheus:
@@ -15,9 +15,9 @@ services:
     image: graphiteapp/graphite-statsd
     container_name: graphite
     ports:
-      - "80:80"        # Web UI
-      - "2003:2003"    # Carbon plaintext protocol
-      - "2004:2004"    # Carbon pickle protocol
+      - "80:80" # Web UI
+      - "2003:2003" # Carbon plaintext protocol
+      - "2004:2004" # Carbon pickle protocol
     networks:
       - monitoring
 
@@ -25,7 +25,7 @@ services:
     image: grafana/grafana
     container_name: grafana
     ports:
-      - "3010:3000"
+      - "3011:3000"
     volumes:
       - grafana-storage:/var/lib/grafana
     networks:

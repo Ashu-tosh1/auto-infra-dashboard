@@ -526,6 +526,9 @@ This setup provides a real-world DevOps pipeline using GitHub, Jenkins, Docker, 
 
 > The repositry is successfully executed and Docker /screenshots/image is stored.
 ![alt text](/screenshots/image-1.png)
+![alt text](/screenshots/image-7.png)
+![alt text](/screenshots/image-8.png)
+![alt text](/screenshots/image-9.png)
 ![Auto Infra Dashboard UI](![alt text](/screenshots/image-5.png)) <sub>*Fig 4.DockerHUB*</sub>
 
 ---
@@ -556,6 +559,7 @@ docker ps
 ---
 
 ![alt text](/screenshots/grafana1.png)
+![alt text](/screenshots/grafana2.png)
 ![alt text](/screenshots/cadvisor.png)
 ![alt text](/screenshots/cadvisor2.png)
 ![alt text](/screenshots/cadvisor3.png)
