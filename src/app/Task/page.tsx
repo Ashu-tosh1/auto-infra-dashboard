@@ -6,9 +6,6 @@ import {
   GitBranch,
   Container,
   Cpu,
- 
-  Network,
- 
   Clock,
   CheckCircle,
   AlertTriangle,
@@ -69,54 +66,46 @@ const Dashboard = () => {
           status: "running",
           image: "ashutosh1201/auto-infra-dashboard:10",
           ports: "3002:3000",
-          uptime: "2d 5h",
+          
         },
         {
           name: "prometheus",
           status: "running",
           image: "prom/prometheus",
           ports: "9090:9090",
-          uptime: "5d 12h",
+          
         },
         {
           name: "grafana",
           status: "running",
           image: "grafana/grafana",
           ports: "3010:3000",
-          uptime: "5d 12h",
+          
         },
         {
           name: "cadvisor",
           status: "running",
           image: "gcr.io/cadvisor/cadvisor:v0.47.2",
           ports: "8081:8080",
-          uptime: "5d 12h",
+         
         },
       ],
       stats: {
-        totalContainers: 6,
-        runningContainers: 5,
+        totalContainers: 4,
+        runningContainers: 4,
         stoppedContainers: 1,
       },
     },
     ec2: {
-      instanceId: "i-0abcdef1234567890",
-      instanceType: "t3.medium",
-      region: "us-east-1",
+      instanceId: "i-09712f7c751726df5",
+      instanceType: "t2.micro",
+      region: "ap-south-1a",
       status: "running",
-      uptime: "7d 14h",
-      publicIp: "54.123.456.789",
-      privateIp: "10.0.1.123",
+      
+      publicIp: "52.66.208.140",
+      privateIp: "172.31.46.234",
     },
-    metrics: {
-      cpu: 45.2,
-      memory: 68.7,
-      disk: 32.1,
-      network: {
-        in: 1.2,
-        out: 0.8,
-      },
-    },
+    
     alerts: [
       {
         type: "warning",
@@ -237,32 +226,32 @@ const Dashboard = () => {
     </div>
   );
 
-  interface MetricBarProps {
-    label: string;
-    value: number;
-    color?: string;
-  }
+  // interface MetricBarProps {
+  //   label: string;
+  //   value: number;
+  //   color?: string;
+  // }
 
-  const MetricBar = ({ label, value, color = "blue" }: MetricBarProps) => (
-    <div className="mb-4">
-      <div className="flex justify-between mb-1">
-        <span className="text-sm font-medium text-gray-700">{label}</span>
-        <span className="text-sm text-gray-500">{value}%</span>
-      </div>
-      <div className="w-full bg-gray-200 rounded-full h-2">
-        <div
-          className={`h-2 rounded-full transition-all duration-500 ${
-            color === "green"
-              ? "bg-green-500"
-              : color === "yellow"
-              ? "bg-yellow-500"
-              : "bg-blue-500"
-          }`}
-          style={{ width: `${value}%` }}
-        ></div>
-      </div>
-    </div>
-  );
+  // const MetricBar = ({ label, value, color = "blue" }: MetricBarProps) => (
+  //   <div className="mb-4">
+  //     <div className="flex justify-between mb-1">
+  //       <span className="text-sm font-medium text-gray-700">{label}</span>
+  //       <span className="text-sm text-gray-500">{value}%</span>
+  //     </div>
+  //     <div className="w-full bg-gray-200 rounded-full h-2">
+  //       <div
+  //         className={`h-2 rounded-full transition-all duration-500 ${
+  //           color === "green"
+  //             ? "bg-green-500"
+  //             : color === "yellow"
+  //             ? "bg-yellow-500"
+  //             : "bg-blue-500"
+  //         }`}
+  //         style={{ width: `${value}%` }}
+  //       ></div>
+  //     </div>
+  //   </div>
+  // );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -357,39 +346,12 @@ const Dashboard = () => {
                 icon={Server}
                 color="purple"
               />
-              <StatCard
-                title="CPU Usage"
-                value={`${dashboardData.metrics.cpu}%`}
-                icon={Cpu}
-                color="orange"
-              />
+             
             </div>
 
             {/* Quick Metrics */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <Activity className="w-5 h-5 mr-2 text-blue-600" />
-                  System Performance
-                </h3>
-                <div className="space-y-4">
-                  <MetricBar
-                    label="CPU Usage"
-                    value={dashboardData.metrics.cpu}
-                    color="blue"
-                  />
-                  <MetricBar
-                    label="Memory Usage"
-                    value={dashboardData.metrics.memory}
-                    color="green"
-                  />
-                  <MetricBar
-                    label="Disk Usage"
-                    value={dashboardData.metrics.disk}
-                    color="yellow"
-                  />
-                </div>
-              </div>
+             
 
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -552,10 +514,7 @@ const Dashboard = () => {
                       <th className="text-left py-3 px-4 font-medium text-gray-900">
                         Ports
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
-                        Uptime
-                      </th>
-                    </tr>
+                                       </tr>
                   </thead>
                   <tbody>
                     {dashboardData.docker.containers.map((container, index) => (
@@ -584,9 +543,7 @@ const Dashboard = () => {
                         <td className="py-3 px-4 text-sm text-gray-600">
                           {container.ports}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-600">
-                          {container.uptime}
-                        </td>
+                       
                       </tr>
                     ))}
                   </tbody>
@@ -641,12 +598,7 @@ const Dashboard = () => {
                     {dashboardData.ec2.privateIp}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Uptime</p>
-                  <p className="text-lg font-semibold text-green-600">
-                    {dashboardData.ec2.uptime}
-                  </p>
-                </div>
+               
               </div>
             </div>
 
@@ -715,44 +667,7 @@ const Dashboard = () => {
               </div>
 
               <div className="bg-white rounded-xl p-6 shadow-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <Network className="w-5 h-5 mr-2 text-green-600" />
-                  Network Traffic
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">
-                        Inbound
-                      </span>
-                      <span className="text-sm text-gray-600">
-                        {dashboardData.metrics.network.in} MB/s
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-green-500 h-2 rounded-full"
-                        style={{ width: "30%" }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">
-                        Outbound
-                      </span>
-                      <span className="text-sm text-gray-600">
-                        {dashboardData.metrics.network.out} MB/s
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-500 h-2 rounded-full"
-                        style={{ width: "20%" }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
+             
               </div>
             </div>
           </div>
@@ -766,23 +681,7 @@ const Dashboard = () => {
                   <Cpu className="w-5 h-5 mr-2 text-blue-600" />
                   CPU & Memory Usage
                 </h3>
-                <div className="space-y-6">
-                  <MetricBar
-                    label="CPU Usage"
-                    value={dashboardData.metrics.cpu}
-                    color="blue"
-                  />
-                  <MetricBar
-                    label="Memory Usage"
-                    value={dashboardData.metrics.memory}
-                    color="green"
-                  />
-                  <MetricBar
-                    label="Disk Usage"
-                    value={dashboardData.metrics.disk}
-                    color="yellow"
-                  />
-                </div>
+                
               </div>
 
               <div className="bg-white rounded-xl p-6 shadow-lg">

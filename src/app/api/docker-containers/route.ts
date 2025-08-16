@@ -16,7 +16,7 @@ export async function GET() {
     }
 
     const containers = stdout.trim().split('\n').map(line => {
-      const [id, name, image, status, ports, uptime, size, createdAt] = line.split('\t');
+      const [id, name, image, status, ports, size, createdAt] = line.split('\t');
       
       return {
         id: id,
@@ -24,7 +24,7 @@ export async function GET() {
         image: image,
         status: parseStatus(status),
         ports: parsePorts(ports),
-        uptime: uptime,
+        
         size: size || 'N/A',
         createdAt: createdAt,
         isRunning: status.toLowerCase().includes('up')

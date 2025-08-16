@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client"
 import { useEffect, useState } from 'react';
 import { 
@@ -7,7 +7,6 @@ import {
   Pause, 
   RotateCcw, 
   Activity, 
- 
   Cpu, 
   Network,
   Clock,
@@ -36,7 +35,6 @@ interface DockerContainer {
   image: string;
   status: 'running' | 'stopped' | 'paused' | 'restarting';
   ports: Port[];
-  uptime: string;
   size: string;
   createdAt: string;
   isRunning: boolean;
@@ -47,7 +45,7 @@ interface DockerResponse {
   containers: DockerContainer[];
 }
 
-const DockerContainersMonitor: React.FC = () => {
+const DockerContainersMonitor = () => {
   const [containers, setContainers] = useState<DockerContainer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +54,7 @@ const DockerContainersMonitor: React.FC = () => {
 
   useEffect(() => {
     fetchContainers();
-    const interval = setInterval(fetchContainers, 5000); // Refresh every 5 seconds
+    const interval = setInterval(fetchContainers, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -71,8 +69,8 @@ const DockerContainersMonitor: React.FC = () => {
       
       const data: DockerResponse = await response.json();
       setContainers(data.containers);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch container data');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch container data');
     } finally {
       setLoading(false);
     }
@@ -219,9 +217,6 @@ const DockerContainersMonitor: React.FC = () => {
                     Ports
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Uptime
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Resources
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -262,9 +257,6 @@ const DockerContainersMonitor: React.FC = () => {
                       <div className="max-w-xs truncate" title={formatPorts(container.ports)}>
                         {formatPorts(container.ports)}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {container.uptime}
                     </td>
                     <td className="px-6 py-4">
                       {container.stats ? (
